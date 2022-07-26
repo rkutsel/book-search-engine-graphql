@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, useParams } from "react-router-dom";
+import { useMutation } from "@apollo/client";
 import { useQuery } from "@apollo/client";
 import { QUERY_ME } from "../utils/queries";
+import { REMOVE_BOOK } from "../utils/mutations";
 import {
 	Jumbotron,
 	Container,
@@ -16,9 +18,35 @@ import { removeBookId } from "../utils/localStorage";
 
 const SavedBooks = () => {
 	const [userData, setUserData] = useState({});
+	const { loading, data } = useQuery(QUERY_ME, {
+		// variables: { _id: "62e0257a53a7727dc3c9aa2a" },
+	});
+	const [removeBook, { error }] = useMutation(REMOVE_BOOK, {
+		update(cache, { data: { removeBook } }) {
+			try {
+				cache.writeQuery({
+					query: QUERY_ME,
+					data: { me: removeBook },
+				});
+			} catch (e) {
+				console.error(e);
+			}
+		},
+	});
+	// console.log(JSON.stringify(data?.me?.savedBooks));
+	// console.log(books);
+	// data?.me?.savedBooks.map((book) => {
+	// 	// key = { bookId };
+	// 	console.log(book.image);
+	// });
+	// setUserData((data) => JSON.stringify(data));
+	// console.log(userData);
+
+	// setUserData(data);
+	// console.log(books);
 
 	// use this to determine if `useEffect()` hook needs to run again
-	const userDataLength = Object.keys(userData).length;
+	// const userDataLength = Object.keys(userData).length;
 
 	// useEffect(() => {
 	// 	const getUserData = async () => {
@@ -45,31 +73,6 @@ const SavedBooks = () => {
 	// 	getUserData();
 	// }, [userDataLength]);
 
-	const { username: userParam } = useParams();
-
-	const { loading, data } = useQuery(QUERY_ME, {
-		variables: { username: userParam },
-	});
-
-	const user = data?.me || data?.user || {};
-	// navigate to personal profile page if username is yours
-	if (Auth.loggedIn() && Auth.getProfile().data.username === userParam) {
-		return <Navigate to="/me" />;
-	}
-
-	if (loading) {
-		return <div>Loading...</div>;
-	}
-
-	if (!user?.username) {
-		return (
-			<h4>
-				You need to be logged in to see this. Use the navigation links above to
-				sign up or log in!
-			</h4>
-		);
-	}
-
 	// create function that accepts the book's mongo _id value as param and deletes the book from the database
 	const handleDeleteBook = async (bookId) => {
 		const token = Auth.loggedIn() ? Auth.getToken() : null;
@@ -79,14 +82,17 @@ const SavedBooks = () => {
 		}
 
 		try {
-			const response = await deleteBook(bookId, token);
+			// const response = await deleteBook(bookId, token);
 
-			if (!response.ok) {
-				throw new Error("something went wrong!");
-			}
+			// if (!response.ok) {
+			// 	throw new Error("something went wrong!");
+			// }
 
-			const updatedUser = await response.json();
-			setUserData(updatedUser);
+			// const updatedUser = await response.json();
+			// setUserData(updatedUser);
+			const { data } = await removeBook({
+				variables: { bookId },
+			});
 			// upon success, remove book's id from localStorage
 			removeBookId(bookId);
 		} catch (err) {
@@ -95,9 +101,9 @@ const SavedBooks = () => {
 	};
 
 	// if data isn't here yet, say so
-	if (!userDataLength) {
-		return <h2>LOADING...</h2>;
-	}
+	// if (!userDataLength) {
+	// 	return <h2>LOADING...</h2>;
+	// }
 
 	return (
 		<>
@@ -108,14 +114,14 @@ const SavedBooks = () => {
 			</Jumbotron>
 			<Container>
 				<h2>
-					{userData.savedBooks.length
-						? `Viewing ${userData.savedBooks.length} saved ${
-								userData.savedBooks.length === 1 ? "book" : "books"
+					{data?.me?.savedBooks.length
+						? `Viewing ${data?.me?.savedBooks.length} saved ${
+								data?.me?.savedBooks.length === 1 ? "book" : "books"
 						  }:`
 						: "You have no saved books!"}
 				</h2>
 				<CardColumns>
-					{userData.savedBooks.map((book) => {
+					{data?.me?.savedBooks.map((book) => {
 						return (
 							<Card key={book.bookId} border="dark">
 								{book.image ? (

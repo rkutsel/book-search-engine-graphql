@@ -6,6 +6,7 @@ const resolvers = {
 	Query: {
 		me: async (parent, args, context) => {
 			if (context.user) {
+				console.log(context.user._id);
 				return User.findOne({ _id: context.user._id }).populate("savedBooks");
 			}
 			throw new AuthenticationError("You need to be logged in!");
@@ -34,19 +35,27 @@ const resolvers = {
 
 			return { token, user };
 		},
-		saveBook: async (parent, { input }, context) => {
+		saveBook: async (
+			parent,
+			{ description, authors, bookId, title, image },
+			context
+		) => {
 			if (context.user) {
 				// const newBook = await Book.create({
 				// 	input,
 				// });
 				// console.log(input);
 				const newBook = await User.findOneAndUpdate(
-					{ _id: context.user_id },
-					// { _id: "62df143447b8b9043480d3b5" },
-					{ $addToSet: { savedBooks: input } },
+					{ _id: context.user._id },
+					// { _id: "62e01502f04112d654fa40d4" },
+					{
+						$addToSet: {
+							savedBooks: { description, authors, bookId, title, image },
+						},
+					},
 					{ new: true }
 				);
-				console.log(input, context.user);
+				// console.log(context.user._id);
 				// console.log(context.user);
 				// await User.findOneAndUpdate(
 				// 	{ _id: context.user._id },
@@ -57,17 +66,20 @@ const resolvers = {
 			}
 			throw new AuthenticationError("You need to be logged in!");
 		},
-		removeBook: async (parent, { input }, context) => {
+		removeBook: async (parent, { bookId }, context) => {
 			if (context.user) {
-				const thought = await Book.findOneAndDelete({
-					_id: input,
-				});
-				await User.findOneAndUpdate(
-					{ _id: context.user._id },
-					{ $pull: { books: book._id } }
+				const removedBook = await User.findOneAndUpdate(
+					{
+						_id: context.user._id,
+					},
+					{
+						$pull: {
+							savedBooks: { bookId },
+						},
+					}
 				);
 
-				return book;
+				return removedBook;
 			}
 			throw new AuthenticationError("You need to be logged in!");
 		},
