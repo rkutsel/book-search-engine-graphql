@@ -36,10 +36,18 @@ const resolvers = {
 		},
 		saveBook: async (parent, { input }, context) => {
 			if (context.user) {
-				const newBook = await Book.create({
-					input,
-				});
-				console.log(input);
+				// const newBook = await Book.create({
+				// 	input,
+				// });
+				// console.log(input);
+				const newBook = await User.findOneAndUpdate(
+					{ _id: context.user_id },
+					// { _id: "62df143447b8b9043480d3b5" },
+					{ $addToSet: { savedBooks: input } },
+					{ new: true }
+				);
+				console.log(input, context.user);
+				// console.log(context.user);
 				// await User.findOneAndUpdate(
 				// 	{ _id: context.user._id },
 				// 	{ $addToSet: { savedBooks: book._id } }
