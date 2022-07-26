@@ -39,11 +39,11 @@ const resolvers = {
 				const newBook = await Book.create({
 					input,
 				});
-
-				await User.findOneAndUpdate(
-					{ _id: context.user._id },
-					{ $addToSet: { savedBooks: book._id } }
-				);
+				console.log(input);
+				// await User.findOneAndUpdate(
+				// 	{ _id: context.user._id },
+				// 	{ $addToSet: { savedBooks: book._id } }
+				// );
 
 				return newBook;
 			}
