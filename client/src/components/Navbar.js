@@ -29,7 +29,7 @@ const AppNavbar = () => {
 									<Nav.Link
 										as={Link}
 										to="/saved"
-										onClick={window.location.reload}
+										// onClick={window.location.reload}
 									>
 										See Your Books
 									</Nav.Link>
